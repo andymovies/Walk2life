@@ -1,0 +1,608 @@
+{
+ "id": "gr55",
+ "version": 1,
+ "titulo": "GR 55",
+ "subtitulo": "Ruta do Medievo",
+ "recorrido": "Betanzos → Santo André de Teixido",
+ "nota": "[Cifras de la ruta: distancia total y etapas, a confirmar sobre el terreno]",
+ "prologo": "[Prólogo de la ruta: por qué este camino, quién te lo cuenta]",
+ "epilogo": "[Epílogo: lo que queda cuando el camino termina]",
+ "insignia": {
+  "nombre": "Ruta do Medievo",
+  "lema": "[Lema de la insignia]",
+  "texto": "[Qué significa esta insignia]"
+ },
+ "certificado": {
+  "titulo": "Certificado",
+  "texto": "[Texto del certificado: que {nombre} ha recorrido a pie la Ruta do Medievo, sello a sello]",
+  "firma": "Andy Navarra"
+ },
+ "musica": null,
+ "cartaFutura": {
+  "dias": 365
+ },
+ "sorpresaFinal": {
+  "titulo": "[Sorpresa final]",
+  "texto": "[Lo que se abre al completar la ruta]",
+  "foto": null,
+  "audio": null,
+  "video": null
+ },
+ "etapas": [
+  {
+   "n": 1,
+   "titulo": "[Título de la etapa 1]",
+   "origen": "Betanzos",
+   "destino": "[destino]",
+   "km": null,
+   "narrativa": {
+    "intro": "[Narrativa de apertura de la etapa: con qué ánimo se sale hoy]",
+    "cierre": "[Narrativa de cierre: lo que deja la etapa]"
+   },
+   "preguntasInicio": [
+    "¿Cómo llegas hoy al camino?",
+    "¿Qué esperas encontrar en esta etapa?"
+   ],
+   "preguntasFin": [
+    "¿Qué es lo que más te ha gustado hoy?",
+    "¿A quién has conocido?",
+    "¿Qué te ha sorprendido?",
+    "¿Qué te ha costado?",
+    "¿Qué te llevas de esta etapa?"
+   ],
+   "sorpresa": {
+    "titulo": "[Sorpresa de fin de etapa]",
+    "texto": "[Se abre al cerrar la etapa]",
+    "foto": null,
+    "audio": null,
+    "video": null
+   },
+   "sellos": [
+    {
+     "id": "e1s1",
+     "nombre": "[Salida · Betanzos]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e1s2",
+     "nombre": "[Lugar 2 de la etapa 1]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e1s3",
+     "nombre": "[Lugar 3 de la etapa 1]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e1s4",
+     "nombre": "[Lugar 4 de la etapa 1]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "titulo": "[Título de la etapa 2]",
+   "origen": "[origen]",
+   "destino": "[destino]",
+   "km": null,
+   "narrativa": {
+    "intro": "[Narrativa de apertura de la etapa: con qué ánimo se sale hoy]",
+    "cierre": "[Narrativa de cierre: lo que deja la etapa]"
+   },
+   "preguntasInicio": [
+    "¿Cómo llegas hoy al camino?",
+    "¿Qué esperas encontrar en esta etapa?"
+   ],
+   "preguntasFin": [
+    "¿Qué es lo que más te ha gustado hoy?",
+    "¿A quién has conocido?",
+    "¿Qué te ha sorprendido?",
+    "¿Qué te ha costado?",
+    "¿Qué te llevas de esta etapa?"
+   ],
+   "sorpresa": {
+    "titulo": "[Sorpresa de fin de etapa]",
+    "texto": "[Se abre al cerrar la etapa]",
+    "foto": null,
+    "audio": null,
+    "video": null
+   },
+   "sellos": [
+    {
+     "id": "e2s1",
+     "nombre": "[Lugar 1 de la etapa 2]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e2s2",
+     "nombre": "[Lugar 2 de la etapa 2]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e2s3",
+     "nombre": "[Lugar 3 de la etapa 2]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e2s4",
+     "nombre": "[Lugar 4 de la etapa 2]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "titulo": "[Título de la etapa 3]",
+   "origen": "[origen]",
+   "destino": "[destino]",
+   "km": null,
+   "narrativa": {
+    "intro": "[Narrativa de apertura de la etapa: con qué ánimo se sale hoy]",
+    "cierre": "[Narrativa de cierre: lo que deja la etapa]"
+   },
+   "preguntasInicio": [
+    "¿Cómo llegas hoy al camino?",
+    "¿Qué esperas encontrar en esta etapa?"
+   ],
+   "preguntasFin": [
+    "¿Qué es lo que más te ha gustado hoy?",
+    "¿A quién has conocido?",
+    "¿Qué te ha sorprendido?",
+    "¿Qué te ha costado?",
+    "¿Qué te llevas de esta etapa?"
+   ],
+   "sorpresa": {
+    "titulo": "[Sorpresa de fin de etapa]",
+    "texto": "[Se abre al cerrar la etapa]",
+    "foto": null,
+    "audio": null,
+    "video": null
+   },
+   "sellos": [
+    {
+     "id": "e3s1",
+     "nombre": "[Lugar 1 de la etapa 3]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e3s2",
+     "nombre": "[Lugar 2 de la etapa 3]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e3oculto",
+     "nombre": "[Nombre del sello oculto]",
+     "pista": "[Enigma: una pista que solo se entiende al estar allí]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": true,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e3s3",
+     "nombre": "[Lugar 3 de la etapa 3]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e3s4",
+     "nombre": "[Lugar 4 de la etapa 3]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "titulo": "[Título de la etapa 4]",
+   "origen": "[origen]",
+   "destino": "[destino]",
+   "km": null,
+   "narrativa": {
+    "intro": "[Narrativa de apertura de la etapa: con qué ánimo se sale hoy]",
+    "cierre": "[Narrativa de cierre: lo que deja la etapa]"
+   },
+   "preguntasInicio": [
+    "¿Cómo llegas hoy al camino?",
+    "¿Qué esperas encontrar en esta etapa?"
+   ],
+   "preguntasFin": [
+    "¿Qué es lo que más te ha gustado hoy?",
+    "¿A quién has conocido?",
+    "¿Qué te ha sorprendido?",
+    "¿Qué te ha costado?",
+    "¿Qué te llevas de esta etapa?"
+   ],
+   "sorpresa": {
+    "titulo": "[Sorpresa de fin de etapa]",
+    "texto": "[Se abre al cerrar la etapa]",
+    "foto": null,
+    "audio": null,
+    "video": null
+   },
+   "sellos": [
+    {
+     "id": "e4s1",
+     "nombre": "[Lugar 1 de la etapa 4]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e4s2",
+     "nombre": "[Lugar 2 de la etapa 4]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e4s3",
+     "nombre": "[Lugar 3 de la etapa 4]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e4s4",
+     "nombre": "[Lugar 4 de la etapa 4]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "titulo": "[Título de la etapa 5]",
+   "origen": "[origen]",
+   "destino": "Santo André de Teixido",
+   "km": null,
+   "narrativa": {
+    "intro": "[Narrativa de apertura de la etapa: con qué ánimo se sale hoy]",
+    "cierre": "[Narrativa de cierre: lo que deja la etapa]"
+   },
+   "preguntasInicio": [
+    "¿Cómo llegas hoy al camino?",
+    "¿Qué esperas encontrar en esta etapa?"
+   ],
+   "preguntasFin": [
+    "¿Qué es lo que más te ha gustado hoy?",
+    "¿A quién has conocido?",
+    "¿Qué te ha sorprendido?",
+    "¿Qué te ha costado?",
+    "¿Qué te llevas de esta etapa?"
+   ],
+   "sorpresa": {
+    "titulo": "[Sorpresa de fin de etapa]",
+    "texto": "[Se abre al cerrar la etapa]",
+    "foto": null,
+    "audio": null,
+    "video": null
+   },
+   "sellos": [
+    {
+     "id": "e5s1",
+     "nombre": "[Lugar 1 de la etapa 5]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e5s2",
+     "nombre": "[Lugar 2 de la etapa 5]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e5s3",
+     "nombre": "[Lugar 3 de la etapa 5]",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    },
+    {
+     "id": "e5s4",
+     "nombre": "Santo André de Teixido",
+     "pista": "[Pista para reconocer el lugar]",
+     "lat": null,
+     "lon": null,
+     "radio": 60,
+     "oculto": false,
+     "texto": "[Tu texto en este lugar: lo que sentiste o pensaste al llegar]",
+     "fotos": [],
+     "audio": null,
+     "video": null,
+     "sorpresa": {
+      "titulo": "[Título de la sorpresa]",
+      "texto": "[Sorpresa que se abre al sellar: una historia, una canción, una entrevista…]",
+      "foto": null,
+      "audio": null,
+      "video": null
+     }
+    }
+   ]
+  }
+ ]
+}
