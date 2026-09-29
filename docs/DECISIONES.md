@@ -1,8 +1,11 @@
-# Credencial digital · decisiones
+# Walk2life · decisiones
 
 Documento vivo. Recoge lo decidido con Andy para que cualquier sesión (ordenador o móvil) retome el trabajo.
 
 ## La idea
+
+Nombre: **Walk2life**. Repositorio: github.com/andymovies/walk2life. Publicación gratuita con GitHub Pages (repositorio público).
+
 
 Una credencial digital para rutas de senderismo, como la del Camino de Santiago, pero para rutas que no la tienen. No es una guía turística: es la mirada personal de Andy (textos, fotos, canciones, entrevistas a paisanos) desbloqueándose sello a sello. Lo que más se llevan los caminantes son las experiencias con las personas; la app lo recoge sin exigir mirar el móvil todo el rato.
 
@@ -31,14 +34,15 @@ Primera ruta (MVP): **GR 55 · Ruta do Medievo**, de Betanzos a Santo André de 
 
 ## Cómo mete Andy su contenido
 
-1. **Modo autor** en la propia app: siete toques seguidos en «Credencial» (arriba a la izquierda) o abrir la app con `?autor`.
+1. **Modo autor** en la propia app: siete toques seguidos en «Walk2life» (arriba a la izquierda) o abrir la app con `?autor`.
 2. «⌖ Nuevo lugar aquí» guarda las coordenadas GPS del sitio donde está. Se añaden textos, fotos, audios (grabados o subidos), enlaces de vídeo, sorpresas y preguntas.
 3. Todo se guarda como borrador en su móvil y ya se ve en la app.
 4. «Exportar contenido (.zip)» → se lo pasa a Claude en una sesión (o un enlace de Drive/Dropbox si pesa mucho). Claude lo integra en `rutas/gr55/` y lo publica.
 
 ## Pendiente
 
-- [ ] Repositorio propio en GitHub y publicación (GitHub Pages, gratis; requiere repo público o plan de pago).
+- [x] Repositorio propio: andymovies/walk2life (público).
+- [ ] Activar GitHub Pages (Settings → Pages → Branch main): lo hace Andy, la sesión no tiene permiso.
 - [ ] Probar vídeo MP4 y notas de voz en iPhone real y en Android real.
 - [ ] APK con Capacitor.
 - [ ] Mapa topográfico sin conexión (ahora hay un esquema con los puntos cuando tienen coordenadas).

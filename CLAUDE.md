@@ -1,6 +1,6 @@
-# Credencial digital
+# Walk2life
 
-App web instalable (PWA) de Andy Navarra: credencial de ruta con sellos, recuerdos, narrativa y entregables (certificado PDF, fotobook PDF, vídeo MP4). HTML/JS estático, sin build, sin servidor, sin datos personales.
+App web instalable (PWA) de Andy Navarra, **Walk2life**: credencial de ruta con sellos, recuerdos, narrativa y entregables (certificado PDF, fotobook PDF, vídeo MP4). HTML/JS estático, sin build, sin servidor, sin datos personales.
 
 **Lee `docs/DECISIONES.md` antes de cambiar nada**: ahí está todo lo decidido y lo pendiente.
 

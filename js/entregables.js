@@ -247,7 +247,7 @@ export async function fotobook(onProgreso = () => {}) {
     ctx.fillStyle = M; ctx.font = '300 30px Jost';
     parrafo(ctx, tx(R.epilogo), cx, 1050, 900, 44);
     ctx.font = '400 20px "Courier Prime"';
-    ctx.fillText('CREDENCIAL · ' + limpio(R.certificado?.firma).toUpperCase(), cx, A4.h - 120);
+    ctx.fillText('WALK2LIFE · ' + limpio(R.certificado?.firma).toUpperCase(), cx, A4.h - 120);
     pags.push(c);
   }
   return pdfDeCanvases(pags);
@@ -380,7 +380,7 @@ export async function videoresumen(onProgreso = () => {}) {
       ctx.fillStyle = T; ctx.font = `300 ${48 * k}px Jost`;
       ctx.fillText(estado.perfil.nombre || '', W / 2, H * 0.66);
       ctx.fillStyle = M; ctx.font = `400 ${26 * k}px "Courier Prime"`;
-      ctx.fillText('CREDENCIAL · ' + limpio(R.certificado?.firma).toUpperCase(), W / 2, H - 140 * k);
+      ctx.fillText('WALK2LIFE · ' + limpio(R.certificado?.firma).toUpperCase(), W / 2, H - 140 * k);
     },
   });
 

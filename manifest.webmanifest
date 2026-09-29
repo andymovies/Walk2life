@@ -1,7 +1,7 @@
 {
-  "name": "Credencial",
-  "short_name": "Credencial",
-  "description": "Credencial digital de ruta: sellos, recuerdos y certificado.",
+  "name": "Walk2life",
+  "short_name": "Walk2life",
+  "description": "Walk2life · credencial digital de ruta: sellos, recuerdos y certificado.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

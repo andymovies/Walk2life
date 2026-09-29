@@ -11,6 +11,7 @@ import { dibujarSello, dibujarInsignia, lienzo, fechaCorta, fuentesListas } from
 
 const app = document.getElementById('app');
 const MAX_FOTOS = 3;
+const MARCA = 'Walk2life';
 
 // ---------------- enrutado ----------------
 const rutas = {
@@ -39,14 +40,14 @@ function cabecera(volver) {
   let toques = 0, reloj;
   const marca = h('button.marca', {
     onclick: () => {
-      // siete toques seguidos en "Credencial" abren el modo autor
+      // siete toques seguidos en la marca (arriba a la izquierda) abren el modo autor
       toques++;
       clearTimeout(reloj);
       reloj = setTimeout(() => (toques = 0), 1500);
       if (toques >= 7) { toques = 0; ir('#/autor'); }
       else if (!volver) ir('#/');
     },
-  }, t('credencial'));
+  }, MARCA);
   return h('header.barra', {},
     volver ? h('button.enlace', { onclick: () => (history.length > 1 ? history.back() : ir(volver)) }, '← ' + t('volver')) : marca,
     h('button.enlace', { onclick: () => ir('#/ajustes') }, t('ajustes')));
@@ -718,7 +719,7 @@ async function avisoInstalar() {
   if (visto) return;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const { cerrar } = hoja([
-    h('span.mono', {}, t('credencial')),
+    h('span.mono', {}, MARCA),
     h('h2', {}, t('instalar')),
     h('p.lead', {}, ios ? t('instalarIOS') : t('instalarAndroid')),
     h('div.botones', {}, h('button.btn', {
@@ -735,7 +736,7 @@ async function arrancar() {
   const indice = await (await fetch('rutas/index.json')).json();
   await cargarRuta(new URLSearchParams(location.search).get('ruta') || indice.predeterminada);
   document.documentElement.lang = getIdioma();
-  document.title = `${t('credencial')} · ${tx(estado.ruta.titulo)}`;
+  document.title = `${MARCA} · ${tx(estado.ruta.titulo)}`;
   if (new URLSearchParams(location.search).has('autor')) location.hash = '#/autor';
   await pintar();
   setTimeout(avisoInstalar, 1200);
