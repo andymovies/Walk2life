@@ -42,7 +42,7 @@ Primera ruta (MVP): **GR 55 · Ruta do Medievo**, de Betanzos a Santo André de 
 ## Pendiente
 
 - [x] Repositorio propio: andymovies/walk2life (público).
-- [ ] Activar GitHub Pages (Settings → Pages → Branch main): lo hace Andy, la sesión no tiene permiso.
+- [x] Publicada en GitHub Pages: https://andymovies.github.io/Walk2life/
 - [ ] Probar vídeo MP4 y notas de voz en iPhone real y en Android real.
 - [ ] APK con Capacitor.
 - [ ] Mapa topográfico sin conexión (ahora hay un esquema con los puntos cuando tienen coordenadas).
