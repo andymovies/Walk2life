@@ -1,6 +1,6 @@
 // Service worker: guarda la app para usarla sin conexión.
 // Al cambiar cualquier archivo de la app, sube VERSION para que los móviles se actualicen.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP = 'app-' + VERSION;
 const ARCHIVOS = [
   './', 'index.html', 'app.css', 'manifest.webmanifest',

@@ -25,6 +25,9 @@ const rutas = {
 
 export async function pintar() {
   pararPosicion();
+  // al cambiar de pantalla no puede quedar ninguna hoja abierta ni el scroll bloqueado
+  document.querySelectorAll('.hoja').forEach((x) => x.remove());
+  document.body.classList.remove('bloq');
   const [nombre, ...args] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = rutas[nombre] || inicio;
   app.innerHTML = '';
@@ -725,7 +728,7 @@ async function avisoInstalar() {
     h('div.botones', {}, h('button.btn', {
       onclick: () => { try { localStorage.setItem('avisoInstalar', '1'); } catch {} cerrar(); },
     }, t('entendido'))),
-  ], { clase: 'mini' });
+  ], { clase: 'centrada' });
 }
 
 // ---------------- arranque ----------------

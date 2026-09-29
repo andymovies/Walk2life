@@ -49,7 +49,7 @@ export function confirmar(texto, si, no) {
       h('div.botones', {},
         h('button.btn', { onclick: () => { cerrar(); ok(true); } }, si),
         h('button.btn.sec', { onclick: () => { cerrar(); ok(false); } }, no)),
-    ], { clase: 'mini' });
+    ], { clase: 'centrada' });
   });
 }
 
