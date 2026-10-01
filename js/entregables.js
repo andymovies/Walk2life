@@ -1,8 +1,10 @@
 // Entregables generados en el propio móvil: certificado (PDF), fotobook (PDF) y videoresumen (MP4).
-import { estado, todosSellos, etapa, medio } from './core.js';
+import { estado, todosSellos, etapa, medio, buscarSello } from './core.js';
 import { blobs } from './db.js';
 import { tx } from './i18n.js';
 import { dibujarSello, dibujarInsignia, fuentesListas, fechaCorta, parrafo, cubrir } from './graficos.js';
+import { claveDia, diasOrdenados, numeroDia, fechaLarga, kmDia, contenidoDia } from './viaje.js';
+import { logros } from './logros.js';
 
 const A4 = { w: 1240, h: 1754 }; // 150 ppp
 const limpio = (s) => String(s || '').trim();
@@ -139,6 +141,18 @@ export async function certificado() {
 }
 
 // ---------- Fotobook ----------
+async function bitmap(id) {
+  const b = id ? await blobs.get(id) : null;
+  return b ? createImageBitmap(b) : null;
+}
+
+// Días del viaje: los del diario y los de cualquier sello (por si un sello no abrió día).
+function clavesViaje() {
+  const set = new Set(diasOrdenados());
+  Object.values(estado.prog.sellos).forEach((s) => set.add(claveDia(s.ts)));
+  return [...set].sort();
+}
+
 async function fotosDe(sello) {
   const p = estado.prog.sellos[sello.id];
   const out = [];
@@ -175,69 +189,184 @@ export async function fotobook(onProgreso = () => {}) {
     pags.push(c);
   }
 
-  const total = R.etapas.reduce((a, e) => a + e.sellos.length + 1, 0);
-  let hecho = 0;
-  for (const e of R.etapas) {
+  // página de respuestas de una etapa (cuando se cerró)
+  const paginaEtapa = (e) => {
     const pe = estado.prog.etapas[e.n];
-    const sellosE = e.sellos.filter((s) => estado.prog.sellos[s.id]);
-    if (!sellosE.length && !(pe && pe.fin)) continue;
-    // página de etapa con sus respuestas
+    const { c, ctx } = pagina(F);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
+    espaciado(ctx, `ETAPA ${e.n}`, cx, 300, 8);
+    ctx.fillStyle = T; ctx.font = '200 64px Jost';
+    parrafo(ctx, limpio(tx(e.titulo)).toUpperCase(), cx, 400, 1000, 80);
+    ctx.fillStyle = M; ctx.font = '300 30px Jost';
+    ctx.fillText(`${tx(e.origen)} → ${tx(e.destino)}`, cx, 560);
+    let y = 720;
+    ctx.textAlign = 'left';
+    const resp = [
+      ...(e.preguntasInicio || []).map((q, i) => [q, pe && pe.respInicio[i]]),
+      ...(e.preguntasFin || []).map((q, i) => [q, pe && pe.respFin[i]]),
+    ].filter(([, r]) => limpio(r));
+    for (const [q, r] of resp) {
+      if (y > A4.h - 200) break;
+      ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
+      y += parrafo(ctx, tx(q), 170, y, 900, 30) + 6;
+      ctx.fillStyle = T; ctx.font = '300 30px Jost';
+      y += parrafo(ctx, r, 170, y, 900, 42) + 34;
+    }
+    pags.push(c);
+  };
+
+  const paginaSello = async (s) => {
+    const p = estado.prog.sellos[s.id];
+    const fotos = await fotosDe(s);
+    const { c, ctx } = pagina(F);
+    const m = 110, w = A4.w - m * 2;
+    if (fotos.length === 1) cubrir(ctx, fotos[0], m, m, w, 1100);
+    else if (fotos.length === 2) { cubrir(ctx, fotos[0], m, m, w, 540); cubrir(ctx, fotos[1], m, m + 560, w, 540); }
+    else if (fotos.length >= 3) {
+      cubrir(ctx, fotos[0], m, m, w, 640);
+      cubrir(ctx, fotos[1], m, m + 660, (w - 20) / 2, 440);
+      cubrir(ctx, fotos[2], m + (w + 20) / 2, m + 660, (w - 20) / 2, 440);
+    }
+    fotos.forEach((f) => f.close && f.close());
+    const yT = fotos.length ? 1310 : 500;
+    if (!fotos.length) dibujarSello(ctx, cx, 420, 200, { id: s.id, nombre: tx(s.nombre), etapa: s.etapa, fecha: fechaCorta(p.ts) });
+    else dibujarSello(ctx, A4.w - m - 90, yT - 110, 95, { id: s.id, nombre: tx(s.nombre), etapa: s.etapa, fecha: fechaCorta(p.ts) });
+    ctx.textAlign = fotos.length ? 'left' : 'center';
+    const x = fotos.length ? m : cx;
+    ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
+    ctx.fillText(`ETAPA ${s.etapa} · ${fechaCorta(p.ts)}`, x, fotos.length ? yT - 40 : 700);
+    ctx.fillStyle = T; ctx.font = '300 44px Jost';
+    const yN = fotos.length ? yT + 20 : 780;
+    const hN = parrafo(ctx, limpio(tx(s.nombre)), x, yN, fotos.length ? w - 230 : w, 54);
+    if (limpio(p.frase)) {
+      ctx.fillStyle = T; ctx.font = '400 30px "Courier Prime"';
+      parrafo(ctx, `“${limpio(p.frase)}”`, x, yN + hN + 30, w, 42);
+    }
+    pags.push(c);
+  };
+
+  // páginas de fotos del diario: hasta 4 por página, con su pie
+  const paginasFotos = async (items, etiqueta) => {
+    for (let i = 0; i < items.length; i += 4) {
+      const grupo = items.slice(i, i + 4);
+      const { c, ctx } = pagina(F);
+      const m = 110, gap = 20, w = (A4.w - m * 2 - gap) / 2, hh = 640;
+      for (let j = 0; j < grupo.length; j++) {
+        const img = await bitmap(grupo[j].foto);
+        // una sola foto ocupa la página; si hay más, rejilla de 2×2
+        const sola = grupo.length === 1;
+        const x = sola ? m : m + (j % 2) * (w + gap), y = sola ? m : m + Math.floor(j / 2) * (hh + 120);
+        const ww = sola ? A4.w - m * 2 : w, hhh = sola ? 1250 : hh;
+        if (img) { cubrir(ctx, img, x, y, ww, hhh); img.close && img.close(); }
+        if (grupo[j].pie) {
+          ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"'; ctx.textAlign = 'left';
+          parrafo(ctx, grupo[j].pie, x, y + hhh + 36, ww, 28);
+        }
+      }
+      ctx.fillStyle = M; ctx.font = '400 20px "Courier Prime"'; ctx.textAlign = 'center';
+      ctx.fillText(etiqueta, cx, A4.h - 70);
+      pags.push(c);
+    }
+  };
+
+  const claves = clavesViaje();
+  let hecho = 0;
+  for (const k of claves) {
+    const d = estado.prog.dias[k] || {};
+    const cont = contenidoDia(k);
+    const etiqueta = `DÍA ${numeroDia(k)} · ${fechaCorta(new Date(k + 'T12:00'))}`;
+    // página del día: cifras, diario, notas y gente
     {
       const { c, ctx } = pagina(F);
       ctx.textAlign = 'center';
       ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
-      espaciado(ctx, `ETAPA ${e.n}`, cx, 300, 8);
-      ctx.fillStyle = T; ctx.font = '200 64px Jost';
-      parrafo(ctx, limpio(tx(e.titulo)).toUpperCase(), cx, 400, 1000, 80);
+      espaciado(ctx, fechaLarga(k).toUpperCase(), cx, 260, 4);
+      ctx.fillStyle = T; ctx.font = '200 110px Jost';
+      espaciado(ctx, `DÍA ${numeroDia(k)}`, cx, 400, 30);
+      const ini = d.inicio && d.inicio.lugar ? buscarSello(d.inicio.lugar) : null;
+      const fin = (d.fin && d.fin.lugar && buscarSello(d.fin.lugar)) || (d.ultimo && d.ultimo.lugar && buscarSello(d.ultimo.lugar));
+      const km = kmDia(d);
       ctx.fillStyle = M; ctx.font = '300 30px Jost';
-      ctx.fillText(`${tx(e.origen)} → ${tx(e.destino)}`, cx, 560);
-      let y = 720;
+      ctx.fillText(`${ini ? limpio(tx(ini.nombre)) : '…'} → ${fin ? limpio(tx(fin.nombre)) : '…'}${km != null ? ` · ${km.toFixed(1).replace('.', ',')} km` : ''}`, cx, 480);
+      let y = 600;
       ctx.textAlign = 'left';
-      const resp = [
-        ...(e.preguntasInicio || []).map((q, i) => [q, pe && pe.respInicio[i]]),
-        ...(e.preguntasFin || []).map((q, i) => [q, pe && pe.respFin[i]]),
-      ].filter(([, r]) => limpio(r));
-      for (const [q, r] of resp) {
-        if (y > A4.h - 200) break;
-        ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
-        y += parrafo(ctx, tx(q), 170, y, 900, 30) + 6;
-        ctx.fillStyle = T; ctx.font = '300 30px Jost';
-        y += parrafo(ctx, r, 170, y, 900, 42) + 34;
-      }
-      pags.push(c);
-    }
-    onProgreso(++hecho / total);
-    for (const s of sellosE) {
-      const p = estado.prog.sellos[s.id];
-      const fotos = await fotosDe(s);
-      const { c, ctx } = pagina(F);
-      const m = 110, w = A4.w - m * 2;
-      if (fotos.length === 1) cubrir(ctx, fotos[0], m, m, w, 1100);
-      else if (fotos.length === 2) { cubrir(ctx, fotos[0], m, m, w, 540); cubrir(ctx, fotos[1], m, m + 560, w, 540); }
-      else if (fotos.length >= 3) {
-        cubrir(ctx, fotos[0], m, m, w, 640);
-        cubrir(ctx, fotos[1], m, m + 660, (w - 20) / 2, 440);
-        cubrir(ctx, fotos[2], m + (w + 20) / 2, m + 660, (w - 20) / 2, 440);
-      }
-      fotos.forEach((f) => f.close && f.close());
-      const yT = fotos.length ? 1310 : 500;
-      if (!fotos.length) dibujarSello(ctx, cx, 420, 200, { id: s.id, nombre: tx(s.nombre), etapa: e.n, fecha: fechaCorta(p.ts) });
-      else dibujarSello(ctx, A4.w - m - 90, yT - 110, 95, { id: s.id, nombre: tx(s.nombre), etapa: e.n, fecha: fechaCorta(p.ts) });
-      ctx.textAlign = fotos.length ? 'left' : 'center';
-      const x = fotos.length ? m : cx;
-      ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
-      ctx.fillText(`ETAPA ${e.n} · ${fechaCorta(p.ts)}`, x, fotos.length ? yT - 40 : 700);
-      ctx.fillStyle = T; ctx.font = '300 44px Jost';
-      const yN = fotos.length ? yT + 20 : 780;
-      const hN = parrafo(ctx, limpio(tx(s.nombre)), x, yN, fotos.length ? w - 230 : w, 54);
-      if (limpio(p.frase)) {
+      if (limpio(d.diario)) {
         ctx.fillStyle = T; ctx.font = '400 30px "Courier Prime"';
-        parrafo(ctx, `“${limpio(p.frase)}”`, x, yN + hN + 30, w, 42);
+        y += parrafo(ctx, limpio(d.diario), 150, y, A4.w - 300, 44) + 40;
+      }
+      for (const n of cont.entradas.filter((e) => e.tipo === 'nota' && limpio(e.texto))) {
+        if (y > A4.h - 260) break;
+        ctx.fillStyle = M; ctx.font = '400 20px "Courier Prime"';
+        ctx.fillText(new Date(n.ts).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }), 150, y);
+        ctx.fillStyle = T; ctx.font = '300 28px Jost';
+        y += parrafo(ctx, limpio(n.texto), 260, y, A4.w - 410, 38) + 24;
+      }
+      if (cont.gente.length && y < A4.h - 200) {
+        ctx.fillStyle = M; ctx.font = '400 20px "Courier Prime"';
+        ctx.fillText('HOY CONOCISTE A', 150, y + 20);
+        ctx.fillStyle = T; ctx.font = '300 30px Jost';
+        parrafo(ctx, cont.gente.map((g) => g.nombre || '—').join(' · '), 150, y + 64, A4.w - 300, 42);
       }
       pags.push(c);
-      onProgreso(++hecho / total);
     }
+    // etapas cerradas este día
+    for (const e of R.etapas) {
+      const pe = estado.prog.etapas[e.n];
+      if (pe && pe.fin && claveDia(pe.fin) === k) paginaEtapa(e);
+    }
+    for (const s of cont.sellos) await paginaSello(s);
+    const fotosDia = cont.entradas.filter((e) => e.tipo === 'foto').flatMap((e) => (e.fotos || []).map((f, i) => ({ foto: f, pie: i === 0 ? e.texto : '' })));
+    await paginasFotos(fotosDia, etiqueta);
+    await paginasFotos(cont.capturas.map((x) => ({ foto: x.foto, pie: '✧ ' + limpio(tx((buscarSello(x.id) || {}).nombre)) })), etiqueta);
+    onProgreso(++hecho / (claves.length + 2));
   }
+
+  // la orla
+  const gente = [...estado.prog.gente].sort((a, b) => a.ts - b.ts);
+  for (let i = 0; i < gente.length; i += 12) {
+    const { c, ctx } = pagina(F);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
+    espaciado(ctx, 'GENTE DEL CAMINO', cx, 170, 8);
+    const grupo = gente.slice(i, i + 12);
+    for (let j = 0; j < grupo.length; j++) {
+      const g = grupo[j];
+      const x = 240 + (j % 3) * 380, y = 360 + Math.floor(j / 3) * 360, r = 120;
+      const img = g.fotos && g.fotos[0] ? await bitmap(g.fotos[0]) : null;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.closePath();
+      ctx.fillStyle = '#151513'; ctx.fill();
+      if (img) { ctx.clip(); cubrir(ctx, img, x - r, y - r, r * 2, r * 2); img.close && img.close(); }
+      ctx.restore();
+      ctx.fillStyle = T; ctx.font = '300 30px Jost';
+      ctx.fillText(g.nombre || '—', x, y + r + 50);
+      ctx.fillStyle = M; ctx.font = '400 18px "Courier Prime"';
+      ctx.fillText(`DÍA ${numeroDia(claveDia(g.ts))}`, x, y + r + 82);
+    }
+    pags.push(c);
+  }
+
+  // logros conseguidos
+  const ganados = logros().filter((l) => estado.prog.logros[l.id]);
+  if (ganados.length) {
+    const { c, ctx } = pagina(F);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = M; ctx.font = '400 22px "Courier Prime"';
+    espaciado(ctx, 'LOGROS', cx, 170, 8);
+    ganados.forEach((l, j) => {
+      const x = 240 + (j % 3) * 380, y = 360 + Math.floor(j / 3) * 300;
+      ctx.strokeStyle = '#c9a45c'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(x, y, 70, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#c9a45c'; ctx.font = '300 60px Jost'; ctx.textBaseline = 'middle';
+      ctx.fillText(l.simbolo, x, y + 4);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = T; ctx.font = '300 28px Jost';
+      ctx.fillText(limpio(tx(l.nombre)), x, y + 115);
+    });
+    pags.push(c);
+  }
+  onProgreso((claves.length + 1) / (claves.length + 2));
 
   // cierre
   {
@@ -312,20 +441,41 @@ export async function videoresumen(onProgreso = () => {}) {
     },
   });
 
-  for (const e of R.etapas) {
-    const sellosE = e.sellos.filter((s) => estado.prog.sellos[s.id]);
-    if (!sellosE.length) continue;
+  const planoFoto = (img, i, arriba, titulo, pie) => ({
+    dur: 3.2, liberar: img, dibujar: (t) => {
+      ctx.fillStyle = '#070707'; ctx.fillRect(0, 0, W, H);
+      const z = 1.04 + 0.08 * t, dx = (i % 2 ? -1 : 1) * 30 * k * t;
+      ctx.save(); ctx.translate(W / 2 + dx, H / 2); ctx.scale(z, z); cubrir(ctx, img, -W / 2, -H / 2, W, H); ctx.restore();
+      const g = ctx.createLinearGradient(0, H * 0.55, 0, H);
+      g.addColorStop(0, 'rgba(7,7,7,0)'); g.addColorStop(1, 'rgba(7,7,7,.85)');
+      ctx.fillStyle = g; ctx.fillRect(0, H * 0.55, W, H * 0.45);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = M; ctx.font = `400 ${26 * k}px "Courier Prime"`;
+      ctx.fillText(arriba, 80 * k, H - 330 * k);
+      ctx.fillStyle = T; ctx.font = `300 ${50 * k}px Jost`;
+      const hN = titulo ? parrafo(ctx, titulo, 80 * k, H - 260 * k, W - 160 * k, 60 * k) : 0;
+      if (pie) { ctx.font = `400 ${32 * k}px "Courier Prime"`; parrafo(ctx, pie, 80 * k, H - 250 * k + hN + 10 * k, W - 160 * k, 44 * k); }
+    },
+  });
+
+  for (const clave of clavesViaje()) {
+    const cont = contenidoDia(clave);
+    const d = estado.prog.dias[clave] || {};
+    const km = kmDia(d);
+    const nDia = numeroDia(clave);
+    const etiqueta = `DÍA ${nDia} · ${fechaCorta(new Date(clave + 'T12:00'))}`;
     planos.push({
-      dur: 1.8, dibujar: () => {
+      dur: 2, dibujar: () => {
         ctx.fillStyle = '#070707'; ctx.fillRect(0, 0, W, H);
         ctx.textAlign = 'center';
-        ctx.fillStyle = M; ctx.font = `400 ${30 * k}px "Courier Prime"`;
-        espaciado(ctx, `ETAPA ${e.n}`, W / 2, H * 0.45, 10 * k);
-        ctx.fillStyle = T; ctx.font = `200 ${54 * k}px Jost`;
-        parrafo(ctx, limpio(tx(e.titulo)).toUpperCase(), W / 2, H * 0.45 + 90 * k, W * 0.8, 70 * k);
+        ctx.fillStyle = M; ctx.font = `400 ${28 * k}px "Courier Prime"`;
+        ctx.fillText(fechaLarga(clave).toUpperCase(), W / 2, H * 0.4);
+        ctx.fillStyle = T; ctx.font = `200 ${120 * k}px Jost`;
+        espaciado(ctx, `DÍA ${nDia}`, W / 2, H * 0.4 + 150 * k, 36 * k);
+        if (km != null) { ctx.fillStyle = M; ctx.font = `300 ${40 * k}px Jost`; ctx.fillText(`${km.toFixed(1).replace('.', ',')} km`, W / 2, H * 0.4 + 240 * k); }
       },
     });
-    for (const s of sellosE) {
+    for (const s of cont.sellos) {
       const p = estado.prog.sellos[s.id];
       const fotos = await fotosDe(s);
       const tomas = fotos.length ? fotos : [null];
@@ -354,12 +504,12 @@ export async function videoresumen(onProgreso = () => {}) {
               ctx.globalAlpha = a;
               ctx.translate(W - 200 * k, img ? H - 520 * k : H * 0.4);
               ctx.scale(esc, esc);
-              dibujarSello(ctx, 0, 0, (img ? 120 : 220) * k, { id: s.id, nombre: tx(s.nombre), etapa: e.n, fecha: fechaCorta(p.ts), color: img ? '#e8c3b5' : undefined });
+              dibujarSello(ctx, 0, 0, (img ? 120 : 220) * k, { id: s.id, nombre: tx(s.nombre), etapa: s.etapa, fecha: fechaCorta(p.ts), color: img ? '#e8c3b5' : undefined });
               ctx.restore();
             }
             ctx.textAlign = 'left';
             ctx.fillStyle = M; ctx.font = `400 ${26 * k}px "Courier Prime"`;
-            ctx.fillText(`ETAPA ${e.n} · ${fechaCorta(p.ts)}`, 80 * k, H - 330 * k);
+            ctx.fillText(`${etiqueta} · ETAPA ${s.etapa}`, 80 * k, H - 330 * k);
             ctx.fillStyle = T; ctx.font = `300 ${50 * k}px Jost`;
             const hN = parrafo(ctx, limpio(tx(s.nombre)), 80 * k, H - 260 * k, W - 160 * k, 60 * k);
             if (limpio(p.frase) && i === 0) {
@@ -368,6 +518,43 @@ export async function videoresumen(onProgreso = () => {}) {
             }
           },
         });
+      });
+    }
+    // hasta 3 fotos del diario por día, y las figuras capturadas
+    const fotosDia = cont.entradas.filter((e) => e.tipo === 'foto').flatMap((e) => (e.fotos || []).map((f) => ({ f, pie: e.texto }))).slice(0, 3);
+    for (const [i, x] of fotosDia.entries()) {
+      const img = await bitmap(x.f);
+      if (img) planos.push(planoFoto(img, i, etiqueta, '', limpio(x.pie)));
+    }
+    for (const [i, x] of cont.capturas.entries()) {
+      const img = await bitmap(x.foto);
+      if (img) planos.push(planoFoto(img, i + 1, '✧ FIGURA', limpio(tx((buscarSello(x.id) || {}).nombre)), ''));
+    }
+  }
+
+  // "Con…": la gente del camino
+  const gente = [...estado.prog.gente].sort((a, b) => a.ts - b.ts).slice(0, 12);
+  if (gente.length) {
+    planos.push({
+      dur: 1.6, dibujar: () => {
+        ctx.fillStyle = '#070707'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center'; ctx.fillStyle = T; ctx.font = `200 ${70 * k}px Jost`;
+        espaciado(ctx, 'CON', W / 2, H * 0.5, 30 * k);
+      },
+    });
+    for (const g of gente) {
+      const img = g.fotos && g.fotos[0] ? await bitmap(g.fotos[0]) : null;
+      planos.push({
+        dur: 1.5, liberar: img, dibujar: (t) => {
+          ctx.fillStyle = '#070707'; ctx.fillRect(0, 0, W, H);
+          const r = 300 * k, y = H * 0.42;
+          ctx.save(); ctx.beginPath(); ctx.arc(W / 2, y, r, 0, Math.PI * 2); ctx.closePath();
+          ctx.fillStyle = '#151513'; ctx.fill();
+          if (img) { ctx.clip(); const z = 1 + 0.05 * t; cubrir(ctx, img, W / 2 - r * z, y - r * z, r * 2 * z, r * 2 * z); }
+          ctx.restore();
+          ctx.textAlign = 'center'; ctx.fillStyle = T; ctx.font = `300 ${60 * k}px Jost`;
+          ctx.fillText(g.nombre || '—', W / 2, y + r + 110 * k);
+        },
       });
     }
   }

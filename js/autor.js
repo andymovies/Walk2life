@@ -326,31 +326,61 @@ async function importar() {
   pintarAutor();
 }
 
-// Rellena un progreso de prueba para ver certificado, fotobook y vídeo sin caminar.
+// Rellena un progreso de prueba para ver Hoy, Recuerdos, certificado, fotobook y vídeo sin caminar.
 async function simular() {
   const P = estado.prog;
-  let ts = Date.now() - 5 * 86400000;
+  const { figuraProvisional } = await import('./captura.js');
+  const { logros } = await import('./logros.js');
   const colores = ['#3b4a3f', '#5b4a3a', '#2f3d4f', '#6b5a45', '#40443a'];
-  for (const e of R.etapas) {
-    P.etapas[e.n] = { inicio: ts, respInicio: ['Prueba'], fin: ts + 8 * 3600000, respFin: (e.preguntasFin || []).map(() => 'Respuesta de prueba') };
+  const fotoPrueba = async (color, texto, figura = null) => {
+    const c = document.createElement('canvas');
+    c.width = 1080; c.height = 1350;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 1080, 1350);
+    g.addColorStop(0, color); g.addColorStop(1, '#111');
+    x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
+    x.fillStyle = 'rgba(255,255,255,.35)'; x.font = '300 48px Jost'; x.textAlign = 'center';
+    x.fillText(texto, 540, 1150);
+    if (figura) x.drawImage(figura, 290, 300, 500, 500);
+    return blobs.guardar(await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.8)), 'prueba');
+  };
+  const clave = (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const hoy = new Date(); hoy.setHours(8, 0, 0, 0);
+  const base0 = hoy.getTime() - R.etapas.length * 86400000;
+  const nombres = ['Marta', 'Xosé', 'Lucía', 'Pierre', 'Carmen', 'Tom', 'Uxía', 'Giulia', 'Ramón', 'Ana'];
+  let ng = 0;
+  for (const [i, e] of R.etapas.entries()) {
+    let ts = base0 + i * 86400000;
+    const color = colores[e.n % 5];
+    P.etapas[e.n] = { inicio: ts, respInicio: ['Con ganas'], fin: ts + 9 * 3600000, respFin: (e.preguntasFin || []).map(() => 'Respuesta de prueba') };
     for (const s of e.sellos) {
-      // foto de prueba: un degradado con el nombre del lugar
-      const c = document.createElement('canvas');
-      c.width = 1080; c.height = 1350;
-      const x = c.getContext('2d');
-      const g = x.createLinearGradient(0, 0, 1080, 1350);
-      g.addColorStop(0, colores[e.n % 5]); g.addColorStop(1, '#111');
-      x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
-      x.fillStyle = 'rgba(255,255,255,.35)'; x.font = '300 48px Jost'; x.textAlign = 'center';
-      x.fillText('foto de prueba', 540, 675);
-      const blob = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.8));
-      P.sellos[s.id] = { ts: ts += 2 * 3600000, frase: 'Frase de prueba', fotos: [await blobs.guardar(blob, 'foto')], audio: null };
+      ts += 2 * 3600000;
+      P.sellos[s.id] = { ts, frase: 'Frase de prueba', fotos: [await fotoPrueba(color, 'foto de prueba')], audio: null };
     }
-    ts += 86400000;
+    const k = clave(base0 + i * 86400000);
+    P.dias[k] = {
+      inicio: { ts: base0 + i * 86400000, pos: null, km: null, lugar: e.sellos[0].id },
+      ultimo: null,
+      fin: { ts: ts + 3600000, pos: null, km: null, lugar: e.sellos[e.sellos.length - 1].id },
+      objetivo: e.sellos[e.sellos.length - 1].id, diario: 'Diario de prueba: hoy hemos estado en… hemos comido con… he conocido a…',
+      kmManual: 15 + (i * 3.7) % 8, cerrado: ts + 4 * 3600000,
+    };
+    P.entradas.push({ id: 'np' + i, ts: base0 + i * 86400000 + 3 * 3600000, tipo: 'nota', texto: 'Nota de prueba a media mañana.', pos: null, lugar: e.sellos[1].id });
+    P.entradas.push({ id: 'fp' + i, ts: base0 + i * 86400000 + 5 * 3600000, tipo: 'foto', fotos: [await fotoPrueba(color, 'foto del diario')], texto: 'Pie de foto de prueba', pos: null, lugar: e.sellos[2].id });
+    for (let j = 0; j < 2; j++) {
+      const n = nombres[ng++ % nombres.length];
+      P.gente.push({ id: 'gp' + ng, ts: base0 + i * 86400000 + (6 + j) * 3600000, nombre: n, texto: 'Ficha de prueba.', fotos: [await fotoPrueba(colores[(e.n + j + 1) % 5], n)], pos: null, lugar: e.sellos[1].id });
+    }
+    const s0 = e.sellos[0];
+    P.capturas[s0.id] = { ts: base0 + i * 86400000 + 4 * 3600000, foto: await fotoPrueba(color, 'figura capturada', figuraProvisional(s0.id, 500)) };
   }
   P.completada = null;
+  // logros sin celebraciones (es una simulación)
   if (!estado.perfil.nombre) { estado.perfil.nombre = 'Nombre de prueba'; await kv.set('perfil', estado.perfil); }
+  const completa = R.etapas.every((e) => e.sellos.every((s) => P.sellos[s.id]));
+  if (completa) P.completada = Date.now();
+  for (const l of logros()) { try { if (!P.logros[l.id] && l.ok(P, R)) P.logros[l.id] = Date.now(); } catch {} }
   await kv.set('progreso:' + R.id, P);
   toast('Progreso de prueba creado');
-  location.hash = '#/final';
+  location.hash = '#/recuerdos';
 }

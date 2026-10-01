@@ -15,7 +15,7 @@ App web instalable (PWA) de Andy Navarra, **Walk2life**: credencial de ruta con 
 ## Estructura
 
 - `index.html`, `app.css`, `sw.js` (sin conexión; **sube `VERSION` en `sw.js` al cambiar archivos de la app** y añade los nuevos a `ARCHIVOS`).
-- `js/app.js` pantallas del caminante · `js/autor.js` modo autor · `js/entregables.js` PDF y MP4 · `js/graficos.js` sellos e insignia · `js/core.js` ruta y progreso · `js/db.js` IndexedDB · `js/media.js` fotos, voz, GPS · `js/i18n.js` textos de interfaz.
+- `js/app.js` enrutado, pestañas, Ruta/etapa/sello/final/ajustes · `js/piezas.js` piezas compartidas · `js/hoy.js` Hoy, botón ＋, cerrar día, diario · `js/viaje.js` días, km, trazado · `js/gente.js` orla · `js/logros.js` · `js/captura.js` figuras holograma · `js/mensajes.js` mensajes secretos por enlace · `js/recuerdos.js` · `js/autor.js` modo autor · `js/entregables.js` PDF y MP4 · `js/graficos.js` sellos e insignia · `js/core.js` ruta y progreso · `js/db.js` IndexedDB · `js/media.js` fotos, voz, GPS · `js/i18n.js` textos de interfaz.
 - `vendor/`: mediabunny (MP4) y fflate (zip), copiados de npm. `fonts/`: Jost y Courier Prime locales.
 - `rutas/index.json` lista de rutas · `rutas/<id>/ruta.json` contenido · `rutas/<id>/media/` fotos y audios de Andy.
 

@@ -18,13 +18,25 @@ export async function cargarRuta(id) {
   estado.rutaId = id;
   estado.publicada = publicada;
   estado.ruta = borrador || publicada;
-  estado.prog = (await kv.get('progreso:' + id)) || nuevoProgreso();
+  estado.prog = completarProgreso((await kv.get('progreso:' + id)) || nuevoProgreso());
   estado.perfil = (await kv.get('perfil')) || { nombre: '' };
   return estado.ruta;
 }
 
 function nuevoProgreso() {
   return { salida: null, etapas: {}, sellos: {}, completada: null, carta: null };
+}
+
+// Campos del viaje (días, diario, gente, logros, capturas, mensajes). Se rellenan también en progresos antiguos.
+function completarProgreso(p) {
+  p.entradas ||= [];   // notas, fotos y voz del diario: { id, ts, tipo, texto, fotos, audio, pos, lugar }
+  p.dias ||= {};       // 'AAAA-MM-DD' → { inicio, ultimo, fin, objetivo, diario, kmManual, cerrado }
+  p.gente ||= [];      // fichas de personas: { id, ts, nombre, texto, fotos, pos, lugar }
+  p.logros ||= {};     // id → ts
+  p.capturas ||= {};   // selloId → { ts, foto }
+  p.mensajes ||= [];   // mensajes secretos recibidos
+  p.enviados ||= [];   // mensajes secretos enviados
+  return p;
 }
 
 export const guardarProgreso = () => kv.set('progreso:' + estado.rutaId, estado.prog);
@@ -43,11 +55,11 @@ export function mediosRuta(ruta = estado.publicada, soloEtapa = null) {
   const lista = [];
   const add = (x) => { if (x && !x.startsWith('idb:') && !/^https?:/.test(x)) lista.push(base(ruta.id) + x); };
   const bloque = (b) => { if (!b) return; add(b.foto); add(b.audio); (b.fotos || []).forEach(add); };
-  if (soloEtapa == null) { add(ruta.musica); bloque(ruta.sorpresaFinal); }
+  if (soloEtapa == null) { add(ruta.musica); add(ruta.track); bloque(ruta.sorpresaFinal); }
   for (const e of ruta.etapas) {
     if (soloEtapa != null && e.n !== soloEtapa) continue;
     bloque(e.sorpresa);
-    for (const s of e.sellos) { bloque(s); bloque(s.sorpresa); }
+    for (const s of e.sellos) { bloque(s); bloque(s.sorpresa); add(s.figura); }
   }
   return lista;
 }

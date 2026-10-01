@@ -32,6 +32,26 @@ Primera ruta (MVP): **GR 55 · Ruta do Medievo**, de Betanzos a Santo André de 
 | Estética | La de andresnavarra.com: negro cinematográfico, Jost fina con tracking, Courier Prime. Sellos en tinta roja, insignia en oro. |
 | Marketing | Aparcado. Idea futura: patrocinio de concellos/Deputación/Turismo de Galicia; botón de donativo. |
 
+## Ampliación (octubre 2026): credencial + diario + red social offline
+
+Andy lo define como «una mezcla entre una credencial, un diario y una red social offline». Decidido y programado:
+
+| Tema | Decisión |
+|---|---|
+| Navegación | Pestañas abajo: **Hoy · Ruta · ＋ · Gente · Recuerdos**. Hoy es la pantalla principal y debe sentirse como un juego. La interfaz definitiva será más intuitiva; esto es el armazón. |
+| Dos ejes | **Ruta** (etapas y lugares de Andy, fija) y **viaje** (días del caminante, variable). Todo lo que crea el caminante se coloca solo en su día (por fecha) y en el lugar más cercano (por GPS o último sello). |
+| Hoy | Día N, km de hoy, sellos y logros. **Objetivo del día** (un lugar de la ruta) con anillo de progreso: por km si hay trazado GPX, si no por sellos. Siguiente sello, mensajes por abrir, línea de tiempo del día. |
+| Días | Se abren solos con la primera actividad. «Cerrar el día»: diario antes de dormir, dónde terminas y km (estimados sobre el trazado o a mano). Si un día queda abierto, Hoy pregunta «¿Cerramos el día de ayer?». Sin notificaciones (una web no puede sin servidor). |
+| Km | GPS solo con la app abierta (web). Km = posición proyectada sobre el **trazado GPX** de la ruta. **Pendiente: GPX grabado por Andy** (`ruta.track` → `rutas/gr55/track.json`, lista `[[lat, lon], …]`). Sin trazado, km a mano. Andy también puede poner `km` (punto kilométrico) en cada lugar. |
+| Gente (orla) | Fichas simples: fotos (cámara o galería), nombre y texto libre de 4–5 líneas (incluido contacto). Aviso «pide permiso antes de la foto». Página de orla en el fotobook y «Con…» en el vídeo. |
+| Logros | 14 logros (algunos secretos) calculados con lo que ya hace el caminante. Andy puede renombrarlos en `ruta.json → logros`. |
+| Figuras «holograma» | Nivel A: la figura del lugar aparece sobre la foto del caminante; se arrastra y se escala. Solo se captura estando allí (GPS, si el lugar tiene coordenadas). Figura provisional generada; Andy pondrá las suyas (`sello.figura`, PNG transparente). Álbum de figuras en Recuerdos. Niveles B (cámara en vivo) y C (AR real, nativa) para más adelante. |
+| Mensajes secretos | Para alguien concreto, **sin servidor**: el mensaje va dentro del enlace (`#m=…`, comprimido). Se comparte por WhatsApp/correo; al abrirlo se añade una parada a la ruta del amigo y el sobre solo se abre al llegar (GPS; sin GPS, por confianza). En iPhone el enlace abre Safari (almacén distinto de la app instalada): botón «Copiar» y en la app ＋ → «Pegar mensaje recibido». Con la app nativa (Capacitor + enlaces universales) se abrirá directo. |
+| Mensajes para cualquiera | Requiere servidor y moderación. Alternativa gratis aparcada: «muro del camino» moderado por Andy (le llegan por correo y los publica en la ruta). |
+| Entregables | Fotobook y vídeo **ordenados por días**: página de día (diario, notas, gente), sellos, fotos del diario, figuras, orla y logros. |
+| App nativa | Capacitor (gratis) envuelve esta misma web. Costes: Apple 99 $/año, Google Play 25 $ una vez, APK gratis; para iPhone hace falta compilar en un Mac (o servicio en la nube). Resuelve: GPS en segundo plano, avisos, enlaces directos, AR real. |
+| Ideas futuras | QR para intercambiar fichas entre caminantes sin internet; muro del camino; figuras en cámara en vivo. |
+
 ## Cómo mete Andy su contenido
 
 1. **Modo autor** en la propia app: siete toques seguidos en «Walk2life» (arriba a la izquierda) o abrir la app con `?autor`.
@@ -45,6 +65,8 @@ Primera ruta (MVP): **GR 55 · Ruta do Medievo**, de Betanzos a Santo André de 
 - [x] Publicada en GitHub Pages: https://andymovies.github.io/Walk2life/
 - [ ] Probar vídeo MP4 y notas de voz en iPhone real y en Android real.
 - [ ] APK con Capacitor.
+- [ ] GPX del GR 55 grabado por Andy (activa km y % por distancia).
+- [ ] Figuras definitivas por lugar (PNG transparente).
 - [ ] Mapa topográfico sin conexión (ahora hay un esquema con los puntos cuando tienen coordenadas).
 - [ ] Traducciones fr/it de la interfaz.
 - [ ] Contenido real de Andy.

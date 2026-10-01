@@ -1,10 +1,11 @@
 // Service worker: guarda la app para usarla sin conexión.
 // Al cambiar cualquier archivo de la app, sube VERSION para que los móviles se actualicen.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP = 'app-' + VERSION;
 const ARCHIVOS = [
   './', 'index.html', 'app.css', 'manifest.webmanifest',
   'js/app.js', 'js/ui.js', 'js/i18n.js', 'js/db.js', 'js/core.js', 'js/media.js', 'js/graficos.js', 'js/entregables.js', 'js/autor.js',
+  'js/piezas.js', 'js/viaje.js', 'js/hoy.js', 'js/gente.js', 'js/logros.js', 'js/captura.js', 'js/mensajes.js', 'js/recuerdos.js',
   'vendor/mediabunny.mjs', 'vendor/fflate.mjs',
   'fonts/jost-latin-200-normal.woff2', 'fonts/jost-latin-300-normal.woff2', 'fonts/jost-latin-400-normal.woff2', 'fonts/courier-prime-latin-400-normal.woff2',
   'icons/icono.svg', 'icons/icono-180.png', 'icons/icono-192.png', 'icons/icono-512.png',

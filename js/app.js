@@ -7,144 +7,78 @@ import {
   sellado, progEtapa, cuenta, siguienteSello, etapaTerminada, rutaCompleta, comprobarFinal, diasHasta, fechaCarta, base,
 } from './core.js';
 import { comprimirFoto, elegirFotos, grabadora, distancia, formatoDist, vigilarPosicion, pararPosicion, entregarArchivo } from './media.js';
-import { dibujarSello, dibujarInsignia, lienzo, fechaCorta, fuentesListas } from './graficos.js';
-
-const app = document.getElementById('app');
-const MAX_FOTOS = 3;
-const MARCA = 'Walk2life';
+import { fechaCorta } from './graficos.js';
+import {
+  app, MAX_FOTOS, MARCA, cabecera, canvasInsignia, canvasSello, barra, bloqueMedios, bloqueSorpresa, preguntas, ir, registrarPintar,
+} from './piezas.js';
+import { pantallaHoy, pantallaDia, menuMas } from './hoy.js';
+import { pantallaGente, pantallaPersona } from './gente.js';
+import { pantallaRecuerdos } from './recuerdos.js';
+import { pantallaMensaje, recibir } from './mensajes.js';
+import { comprobarLogros } from './logros.js';
+import { registrarActividad, posicionRapida, cargarTrack } from './viaje.js';
 
 // ---------------- enrutado ----------------
 const rutas = {
-  '': inicio,
+  '': pantallaHoy,
+  ruta: pantallaRuta,
   etapa: pantallaEtapa,
   sello: pantallaSello,
+  dia: pantallaDia,
+  gente: pantallaGente,
+  persona: pantallaPersona,
+  recuerdos: pantallaRecuerdos,
+  mensaje: pantallaMensaje,
   final: pantallaFinal,
   ajustes: pantallaAjustes,
   autor: async (...a) => (await import('./autor.js')).pantallaAutor(app, ...a),
 };
+const PESTANAS = ['', 'ruta', 'gente', 'recuerdos'];
 
 export async function pintar() {
   pararPosicion();
   // al cambiar de pantalla no puede quedar ninguna hoja abierta ni el scroll bloqueado
   document.querySelectorAll('.hoja').forEach((x) => x.remove());
   document.body.classList.remove('bloq');
+  // enlace de mensaje secreto: #m=...
+  const m = /^#m=([A-Za-z0-9_-]+)/.exec(location.hash);
+  if (m) {
+    history.replaceState(null, '', location.pathname + location.search + '#/');
+    await pintar();
+    recibir(m[1]);
+    return;
+  }
   const [nombre, ...args] = location.hash.replace(/^#\/?/, '').split('/');
-  const fn = rutas[nombre] || inicio;
+  const fn = rutas[nombre] || pantallaHoy;
   app.innerHTML = '';
-  app.className = 'p-' + (nombre || 'inicio');
+  app.className = 'p-' + (nombre || 'hoy');
   await fn(...args.map(decodeURIComponent));
+  pestanas(rutas[nombre] ? nombre : '');
   window.scrollTo(0, 0);
 }
-
-const ir = (hash) => { location.hash = hash; };
+registrarPintar(pintar);
 window.addEventListener('hashchange', pintar);
 
-function cabecera(volver) {
-  let toques = 0, reloj;
-  const marca = h('button.marca', {
-    onclick: () => {
-      // siete toques seguidos en la marca (arriba a la izquierda) abren el modo autor
-      toques++;
-      clearTimeout(reloj);
-      reloj = setTimeout(() => (toques = 0), 1500);
-      if (toques >= 7) { toques = 0; ir('#/autor'); }
-      else if (!volver) ir('#/');
-    },
-  }, MARCA);
-  return h('header.barra', {},
-    volver ? h('button.enlace', { onclick: () => (history.length > 1 ? history.back() : ir(volver)) }, '← ' + t('volver')) : marca,
-    h('button.enlace', { onclick: () => ir('#/ajustes') }, t('ajustes')));
+// Barra inferior: Hoy · Ruta · ＋ · Gente · Recuerdos
+function pestanas(actual) {
+  document.querySelector('nav.pestanas')?.remove();
+  if (!PESTANAS.includes(actual) && !['etapa', 'sello', 'dia', 'persona', 'mensaje', 'final'].includes(actual)) return;
+  const tab = (hash, icono, texto) => h('a' + (actual === hash ? '.activa' : ''), { href: '#/' + hash }, h('span.icono', {}, icono), h('span', {}, texto));
+  document.body.append(h('nav.pestanas', {},
+    tab('', '◎', t('hoy')),
+    tab('ruta', '⋯', t('ruta')),
+    h('button.mas', { onclick: menuMas, 'aria-label': t('anadir') }, '+'),
+    tab('gente', '☺', t('gente')),
+    tab('recuerdos', '✦', t('recuerdos'))));
 }
 
-// ---------------- piezas ----------------
-function canvasInsignia(tam, ganada) {
-  const { c, ctx } = lienzo(tam);
-  const R = estado.ruta;
-  const pintarla = () => {
-    ctx.clearRect(0, 0, tam, tam);
-    dibujarInsignia(ctx, tam / 2, tam / 2, tam * 0.46, { nombre: tx(R.insignia?.nombre) || tx(R.subtitulo), codigo: R.titulo, ganada });
-  };
-  pintarla();
-  fuentesListas().then(pintarla);
-  c.className = 'insignia' + (ganada ? ' ganada' : '');
-  return c;
-}
-
-function canvasSello(s, tam) {
-  const { c, ctx } = lienzo(tam);
-  const p = estado.prog.sellos[s.id];
-  const pintarlo = () => {
-    ctx.clearRect(0, 0, tam, tam);
-    dibujarSello(ctx, tam / 2, tam / 2, tam * 0.44, { id: s.id, nombre: tx(s.nombre), etapa: s.etapa, fecha: p ? fechaCorta(p.ts) : '' });
-  };
-  pintarlo();
-  fuentesListas().then(pintarlo);
-  c.className = 'sello-canvas';
-  return c;
-}
-
-function barra(frac) {
-  return h('div.progreso', {}, h('i', { style: { width: Math.round(frac * 100) + '%' } }));
-}
-
-async function bloqueMedios(b) {
-  if (!b) return null;
-  const el = h('div.medios');
-  for (const f of [b.foto, ...(b.fotos || [])].filter(Boolean)) {
-    el.append(h('img', { src: await medio(f), loading: 'lazy', alt: '' }));
-  }
-  if (b.audio) el.append(h('audio', { controls: true, preload: 'none', src: await medio(b.audio) }));
-  if (b.video) el.append(h('a.btn.sec', { href: b.video, target: '_blank', rel: 'noopener' }, `▶ ${t('verVideo')} · ${t('necesitaConexion')}`));
-  return el;
-}
-
-async function bloqueSorpresa(s, abierta) {
-  if (!s) return null;
-  if (!abierta) return h('div.sorpresa.cerrada', {}, h('span.mono', {}, '✦ ' + t('sorpresa')), h('p.mut', {}, t('sorpresaBloqueada')));
-  return h('div.sorpresa', {},
-    h('span.mono', {}, '✦ ' + t('sorpresa')),
-    s.titulo ? h('h3', {}, tx(s.titulo)) : null,
-    textoAutor(tx(s.texto)),
-    await bloqueMedios(s));
-}
-
-// Preguntas una a una, sin obligar. Devuelve las respuestas o null si se cancela.
-function preguntas(titulo, lista, previas = []) {
-  return new Promise((ok) => {
-    const resp = [...previas];
-    let i = 0;
-    const cont = h('div.preguntas');
-    const { cerrar } = hoja(cont, { clase: 'completa' });
-    const paso = () => {
-      cont.innerHTML = '';
-      const area = h('textarea', { rows: 5, placeholder: t('respuesta'), value: resp[i] || '' });
-      const sig = () => {
-        resp[i] = area.value.trim();
-        if (++i < lista.length) paso();
-        else { cerrar(); ok(resp); }
-      };
-      cont.append(
-        h('span.mono', {}, `${titulo} · ${i + 1}/${lista.length}`),
-        h('h2.pregunta', {}, tx(lista[i])),
-        area,
-        h('div.botones', {},
-          h('button.btn', { onclick: sig }, i + 1 < lista.length ? t('continuar') : t('guardar')),
-          h('button.btn.sec', { onclick: () => { area.value = ''; sig(); } }, t('omitir'))),
-        h('button.enlace.x', { onclick: () => { cerrar(); ok(null); } }, t('cerrar')));
-      setTimeout(() => area.focus(), 350);
-    };
-    paso();
-  });
-}
-
-// ---------------- INICIO ----------------
-async function inicio() {
+// ---------------- RUTA ----------------
+async function pantallaRuta() {
   const R = estado.ruta;
   const P = estado.prog;
   const c = cuenta();
   app.append(cabecera());
 
-  const empezada = P.salida || Object.keys(P.sellos).length || Object.keys(P.etapas).length;
   const portada = h('section.portada', {},
     h('p.mono', {}, tx(R.recorrido)),
     h('h1.titulo', {}, tx(R.titulo)),
@@ -155,43 +89,6 @@ async function inicio() {
         : c.faltan === 1 ? t('faltaSello') : t('faltanSellos', { n: c.faltan })),
     barra(c.hechos / c.total));
   app.append(portada);
-
-  // cuenta atrás hasta la salida
-  if (P.salida && !Object.keys(P.sellos).length) {
-    const d = diasHasta(P.salida);
-    if (d >= 0) app.append(h('section.cuentaatras', {},
-      h('span.num', {}, d > 1 ? d : ''),
-      h('span.mono', {}, d > 1 ? t('faltanDias', { n: d }) : d === 1 ? t('faltaDia') : t('hoySales'))));
-  }
-
-  // carta al futuro
-  const fc = fechaCarta();
-  if (fc) {
-    const d = diasHasta(fc);
-    app.append(h('section.carta-aviso', { onclick: () => ir('#/final') },
-      h('span.mono', {}, '✉ ' + t('cartaFutura')),
-      h('p', {}, d > 0 ? t('cartaSeAbre', { n: d }) : t('cartaAbierta'))));
-  }
-
-  if (!empezada) {
-    const nombre = h('input', { type: 'text', value: estado.perfil.nombre || '', placeholder: t('tuNombre'), autocomplete: 'name' });
-    const fecha = h('input', { type: 'date' });
-    app.append(h('section.bienvenida', {},
-      h('span.mono', {}, t('prologo')),
-      textoAutor(tx(R.prologo)),
-      h('label', {}, h('span.mono', {}, t('tuNombre')), nombre),
-      h('label', {}, h('span.mono', {}, t('fechaSalida')), fecha),
-      h('button.btn', {
-        onclick: async () => {
-          estado.perfil.nombre = nombre.value.trim();
-          P.salida = fecha.value || new Date().toISOString().slice(0, 10);
-          await guardarPerfil();
-          await guardarProgreso();
-          pedirPersistencia();
-          pintar();
-        },
-      }, t('comenzarRuta'))));
-  }
 
   // etapas
   const lista = h('section.etapas', {}, h('h2.seccion', {}, t('etapas')));
@@ -281,7 +178,7 @@ async function pantallaEtapa(nStr) {
   if (!e) return ir('#/');
   const pe = progEtapa(n);
   const ce = cuenta(n);
-  app.append(cabecera('#/'));
+  app.append(cabecera('#/ruta'));
 
   app.append(h('section.cab-etapa', {},
     h('span.mono', {}, `${t('etapa')} ${n} / ${estado.ruta.etapas.length}`),
@@ -401,7 +298,7 @@ async function celebrarEtapa(e, rutaTerminada) {
     await bloqueSorpresa(e.sorpresa, true));
   const { cerrar } = hoja(cont, { clase: 'completa' });
   cont.append(h('div.botones', {}, h('button.btn', {
-    onclick: () => { cerrar(); rutaTerminada ? ir('#/final') : pintar(); },
+    onclick: async () => { cerrar(); await comprobarLogros(); rutaTerminada ? ir('#/final') : pintar(); },
   }, t('continuar'))));
 }
 
@@ -444,6 +341,16 @@ async function pantallaSello(id) {
   rec.append(h('button.enlace', { onclick: () => formularioRecuerdo(s) }, t('editarRecuerdo')));
   app.append(rec);
 
+  // figura del lugar (captura tipo holograma)
+  const cap = estado.prog.capturas[id];
+  const zonaFig = h('section.figura-lugar', {}, h('h2.seccion', {}, '✧ ' + t('figura')));
+  if (cap) zonaFig.append(h('img.captura-hecha', { src: await urlBlob(cap.foto), alt: '' }));
+  else zonaFig.append(h('p.mut', {}, t('figuraExplica')));
+  zonaFig.append(h('div.botones', {},
+    h('button.btn' + (cap ? '.sec' : ''), { onclick: async () => (await import('./captura.js')).capturar(id) }, cap ? t('repetirCaptura') : '✧ ' + t('capturarFigura')),
+    h('button.enlace', { onclick: async () => (await import('./captura.js')).capturarDesdeGaleria(id) }, t('deGaleria'))));
+  app.append(zonaFig);
+
   // lo que Andy cuenta de este lugar: se desbloquea al sellar
   app.append(h('section.andy', {},
     h('h2.seccion', {}, t('sobreEsteLugar')),
@@ -456,7 +363,10 @@ async function sellar(s) {
   estado.prog.sellos[s.id] = { ts: Date.now(), frase: '', fotos: [], audio: null };
   const pe = progEtapa(s.etapa);
   if (!pe.inicio) pe.inicio = Date.now();
+  registrarActividad(estado.ultimaPos || null, s);
   await guardarProgreso();
+  // la posición del sello se apunta en segundo plano (para los km del día), sin hacer esperar
+  posicionRapida(6000).then(async (pos) => { if (pos) { registrarActividad(pos, s); await guardarProgreso(); } });
   pedirPersistencia();
   if (navigator.vibrate) navigator.vibrate([30, 60, 90]);
 
@@ -471,7 +381,7 @@ async function sellar(s) {
   const { cerrar } = hoja(cont, { clase: 'completa' });
   cont.append(h('div.botones', {},
     h('button.btn', { onclick: () => { cerrar(); formularioRecuerdo(s); } }, t('continuar')),
-    h('button.btn.sec', { onclick: () => { cerrar(); pintar(); } }, t('omitir'))));
+    h('button.btn.sec', { onclick: async () => { cerrar(); await comprobarLogros(); pintar(); } }, t('omitir'))));
 }
 
 function formularioRecuerdo(s) {
@@ -537,6 +447,7 @@ function formularioRecuerdo(s) {
         Object.assign(p, { fotos, frase: frase.value.trim(), audio });
         await guardarProgreso();
         cerrar();
+        await comprobarLogros();
         if (location.hash !== '#/sello/' + s.id) ir('#/sello/' + s.id); else pintar();
       },
     }, t('guardar')),
@@ -550,7 +461,7 @@ async function pantallaFinal() {
   const R = estado.ruta;
   const P = estado.prog;
   comprobarFinal() && (await guardarProgreso());
-  app.append(cabecera('#/'));
+  app.append(cabecera('#/recuerdos'));
   const completa = !!P.completada;
 
   app.append(h('section.final-cab', {},
@@ -720,6 +631,8 @@ async function avisoInstalar() {
   let visto = false;
   try { visto = localStorage.getItem('avisoInstalar') === '1'; } catch {}
   if (visto) return;
+  // si hay otra hoja abierta (p. ej. un mensaje recibido), esperar a que se cierre
+  if (document.querySelector('.hoja')) { setTimeout(avisoInstalar, 2000); return; }
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const { cerrar } = hoja([
     h('span.mono', {}, MARCA),
@@ -738,6 +651,7 @@ async function arrancar() {
   }
   const indice = await (await fetch('rutas/index.json')).json();
   await cargarRuta(new URLSearchParams(location.search).get('ruta') || indice.predeterminada);
+  await cargarTrack();
   document.documentElement.lang = getIdioma();
   document.title = `${MARCA} · ${tx(estado.ruta.titulo)}`;
   if (new URLSearchParams(location.search).has('autor')) location.hash = '#/autor';
