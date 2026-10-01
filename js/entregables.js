@@ -347,6 +347,9 @@ export async function fotobook(onProgreso = () => {}) {
     pags.push(c);
   }
 
+  // la credencial en papel, si la han subido
+  await paginasFotos(estado.prog.papel.map((f) => ({ foto: f, pie: '' })), 'CREDENCIAL');
+
   // logros conseguidos
   const ganados = logros().filter((l) => estado.prog.logros[l.id]);
   if (ganados.length) {
@@ -557,6 +560,11 @@ export async function videoresumen(onProgreso = () => {}) {
         },
       });
     }
+  }
+
+  for (const [i, f] of estado.prog.papel.slice(0, 2).entries()) {
+    const img = await bitmap(f);
+    if (img) planos.push(planoFoto(img, i, 'CREDENCIAL', '', ''));
   }
 
   planos.push({

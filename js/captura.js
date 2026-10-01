@@ -82,12 +82,11 @@ export async function capturar(selloId) {
   await editor(s, files[0], aqui.pos);
 }
 
+// Desde la galería se puede capturar en cualquier momento (con una foto hecha allí): sin prisas ni obligaciones.
 export async function capturarDesdeGaleria(selloId) {
   const s = buscarSello(selloId);
-  const aqui = await estaAqui(s);
-  if (!aqui.ok) { toast(t('acercate', { d: formatoDist(aqui.d) }), 4000); return; }
   const files = await elegirFotos(false);
-  if (files.length) await editor(s, files[0], aqui.pos);
+  if (files.length) await editor(s, files[0], null);
 }
 
 async function editor(s, file, pos) {

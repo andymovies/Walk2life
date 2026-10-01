@@ -4,8 +4,8 @@ import { t, tx } from './i18n.js';
 import { estado, guardarProgreso, buscarSello } from './core.js';
 import { blobs, urlBlob } from './db.js';
 import { comprimirFoto, elegirFotos } from './media.js';
-import { app, cabecera, pintar, ir } from './piezas.js';
-import { posicionRapida, lugarCercano, registrarActividad, claveDia, numeroDia } from './viaje.js';
+import { app, cabecera, pintar, ir, selectorCuando } from './piezas.js';
+import { posicionRapida, lugarCercano, registrarActividad, claveDia, numeroDia, esHoy } from './viaje.js';
 import { comprobarLogros } from './logros.js';
 import { fechaCorta } from './graficos.js';
 
@@ -29,6 +29,7 @@ export function fichaPersona(id = null) {
   const fotos = [...((previa && previa.fotos) || [])];
   const nombre = h('input', { type: 'text', value: previa ? previa.nombre : '', placeholder: t('nombrePersona'), autocomplete: 'off' });
   const texto = h('textarea', { rows: 5, value: previa ? previa.texto : '', placeholder: t('textoPersona') });
+  const cuando = selectorCuando(previa ? previa.ts : Date.now());
   const galeria = h('div.miniaturas');
   const pintarFotos = async () => {
     galeria.innerHTML = '';
@@ -47,7 +48,9 @@ export function fichaPersona(id = null) {
     galeria, botonesFoto(anadir),
     h('p.mut.peq', {}, t('pidePermiso')),
     h('label', {}, h('span.mono', {}, t('nombrePersona')), nombre),
-    h('label', {}, h('span.mono', {}, t('sobrePersona')), texto));
+    h('label', {}, h('span.mono', {}, t('sobrePersona')), texto),
+    cuando.el,
+    h('p.mut.peq', {}, t('personaDespues')));
   const { cerrar } = hoja(cont, { clase: 'completa' });
   cont.append(h('div.botones', {},
     h('button.btn', {
@@ -55,13 +58,14 @@ export function fichaPersona(id = null) {
         if (!nombre.value.trim() && !fotos.length) { toast(t('faltaNombre')); return; }
         if (previa) {
           for (const f of previa.fotos || []) if (!fotos.includes(f)) await blobs.del(f);
-          Object.assign(previa, { nombre: nombre.value.trim(), texto: texto.value.trim(), fotos });
+          Object.assign(previa, { nombre: nombre.value.trim(), texto: texto.value.trim(), fotos, ts: cuando.valor() });
           await guardarProgreso();
         } else {
-          const pos = await posicionRapida(5000);
+          const ts = cuando.valor();
+          const pos = esHoy(ts) ? await posicionRapida(5000) : null;
           const lugar = lugarCercano(pos);
-          P.gente.push({ id: 'g' + Date.now().toString(36), ts: Date.now(), nombre: nombre.value.trim(), texto: texto.value.trim(), fotos, pos, lugar: lugar ? lugar.id : null });
-          registrarActividad(pos, lugar);
+          P.gente.push({ id: 'g' + Date.now().toString(36), ts, nombre: nombre.value.trim(), texto: texto.value.trim(), fotos, pos, lugar: lugar ? lugar.id : null });
+          registrarActividad(pos, lugar, ts);
           await guardarProgreso();
         }
         cerrar();

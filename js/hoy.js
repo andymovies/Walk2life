@@ -1,10 +1,10 @@
 // "Hoy": la pantalla principal. Progreso del día como un juego, siguiente sello, lo vivido hoy y el diario.
-import { h, hoja, toast, textoAutor } from './ui.js';
+import { h, hoja, toast, textoAutor, confirmar } from './ui.js';
 import { t, tx, getIdioma } from './i18n.js';
 import { estado, guardarProgreso, guardarPerfil, todosSellos, sellado, buscarSello, cuenta, diasHasta, fechaCarta } from './core.js';
 import { blobs, urlBlob, pedirPersistencia } from './db.js';
 import { comprimirFoto, elegirFotos, grabadora, distancia, formatoDist, vigilarPosicion } from './media.js';
-import { app, cabecera, pintar, ir, canvasSello, barra } from './piezas.js';
+import { app, cabecera, pintar, ir, canvasSello, barra, selectorCuando, selectorLugar } from './piezas.js';
 import {
   claveDia, dia, numeroDia, fechaLarga, kmDia, kmTotales, progresoObjetivo, diaSinCerrar, contenidoDia, nuevaEntrada,
   hayTrack, kmEnTrack, registrarActividad, lugarCercano, diasOrdenados,
@@ -93,7 +93,8 @@ export async function pantallaHoy() {
             pedirPersistencia();
             pintar();
           },
-        }, t('ponerObjetivo')));
+        }, t('ponerObjetivo')),
+        h('p.mut.peq', {}, t('objetivoOpcional')));
       return;
     }
     const pr = progresoObjetivo(clave);
@@ -196,7 +197,8 @@ async function linea(c, vacioHoy = false) {
         if (e.tipo === 'foto') { const g = h('div.medios'); for (const f of e.fotos || []) g.append(h('img', { src: await urlBlob(f), alt: '' })); cuerpo.append(g); }
         if (e.tipo === 'voz' && e.audio) cuerpo.append(h('audio', { controls: true, src: await urlBlob(e.audio) }));
         if (e.texto) cuerpo.append(h('p.frase', {}, e.texto));
-        return h('div.item.entrada', {}, h('span.icono', {}, e.tipo === 'foto' ? '◉' : e.tipo === 'voz' ? '●' : '✎'), cuerpo);
+        return h('div.item.entrada', { onclick: (ev) => { if (ev.target.closest('audio')) return; editarEntrada(e.id); } },
+          h('span.icono', {}, e.tipo === 'foto' ? '◉' : e.tipo === 'voz' ? '●' : '✎'), cuerpo);
       },
     });
   }
@@ -263,6 +265,8 @@ export async function pantallaDia(clave) {
     h('span.mono', {}, fechaLarga(clave, getIdioma())),
     h('h1.titulo-dia', {}, `${t('dia')} ${numeroDia(clave)}`),
     h('p.mut', {}, `${ini ? tx(ini.nombre) : '…'} → ${fin ? tx(fin.nombre) : '…'} · ${kmTxt(kmDia(d))} km`)));
+  estado.diaPorDefecto = clave;
+  app.append(h('p.mut.peq.centro', {}, t('anadirAEsteDia')));
   if (d.diario) app.append(h('section.narrativa', {}, h('span.mono', {}, t('tuDiario')), h('p.frase.carta-texto', {}, d.diario)));
   app.append(h('section', {}, await linea(contenidoDia(clave))));
   app.append(h('section.centro', {}, h('button.btn.sec', { onclick: () => cerrarDia(clave) }, d.cerrado ? t('editarDiario') : '☾ ' + t('cerrarDia'))));
@@ -286,8 +290,8 @@ export function menuMas() {
   cont.append(h('button.enlace', { onclick: cerrar }, t('cerrar')));
 }
 
-async function guardarEntrada(datos) {
-  await nuevaEntrada(datos);
+async function guardarEntrada(datos, opciones) {
+  await nuevaEntrada(datos, opciones);
   toast('✓ ' + t('guardadoEnDia'));
   await comprobarLogros();
   pintar();
@@ -301,10 +305,12 @@ function fotoRapida() {
     const fotos = [];
     for (const f of files) fotos.push(await blobs.guardar(await comprimirFoto(f), 'diario'));
     const pie = h('input', { type: 'text', placeholder: t('pieFoto') });
-    const cont = h('div', {}, h('h2', {}, t('foto')), h('p.mut', {}, t('fotosN', { n: fotos.length })), pie);
+    const cuando = selectorCuando(), donde = selectorLugar();
+    const cont = h('div', {}, h('h2', {}, t('foto')), h('p.mut', {}, t('fotosN', { n: fotos.length })), pie, cuando.el, donde.el,
+      h('p.mut.peq', {}, t('fotoDespues')));
     const { cerrar } = hoja(cont, { clase: 'centrada' });
     cont.append(h('div.botones', {},
-      h('button.btn', { onclick: async () => { cerrar(); await guardarEntrada({ tipo: 'foto', fotos, texto: pie.value.trim() }); } }, t('guardar')),
+      h('button.btn', { onclick: async () => { cerrar(); await guardarEntrada({ tipo: 'foto', fotos, texto: pie.value.trim() }, { cuando: cuando.valor(), lugarId: donde.valor() }); } }, t('guardar')),
       h('button.btn.sec', { onclick: async () => { for (const f of fotos) await blobs.del(f); cerrar(); } }, t('cancelar'))));
   };
   i.click();
@@ -312,10 +318,11 @@ function fotoRapida() {
 
 function notaRapida() {
   const area = h('textarea', { rows: 6, placeholder: t('notaMarcador') });
-  const cont = h('div', {}, h('h2', {}, t('nota')), area);
+  const cuando = selectorCuando(), donde = selectorLugar();
+  const cont = h('div', {}, h('h2', {}, t('nota')), area, cuando.el, donde.el);
   const { cerrar } = hoja(cont, { clase: 'centrada' });
   cont.append(h('div.botones', {},
-    h('button.btn', { onclick: async () => { if (!area.value.trim()) return; cerrar(); await guardarEntrada({ tipo: 'nota', texto: area.value.trim() }); } }, t('guardar')),
+    h('button.btn', { onclick: async () => { if (!area.value.trim()) return; cerrar(); await guardarEntrada({ tipo: 'nota', texto: area.value.trim() }, { cuando: cuando.valor(), lugarId: donde.valor() }); } }, t('guardar')),
     h('button.btn.sec', { onclick: cerrar }, t('cancelar'))));
   setTimeout(() => area.focus(), 350);
 }
@@ -331,11 +338,47 @@ function vozRapida() {
       } else {
         const blob = await grab.parar(); grab = null;
         cerrar();
-        await guardarEntrada({ tipo: 'voz', audio: await blobs.guardar(blob, 'voz') });
+        await guardarEntrada({ tipo: 'voz', audio: await blobs.guardar(blob, 'voz') }, { cuando: cuando.valor(), lugarId: donde.valor() });
       }
     },
   }, '● ' + t('grabar'));
-  const cont = h('div', {}, h('h2', {}, t('notaVoz')), estadoTxt, h('div.botones', {}, b));
+  const cuando = selectorCuando(), donde = selectorLugar();
+  const cont = h('div', {}, h('h2', {}, t('notaVoz')), cuando.el, donde.el, estadoTxt, h('div.botones', {}, b));
   const { cerrar } = hoja(cont, { clase: 'centrada' });
   cont.append(h('button.enlace', { onclick: async () => { if (grab) await grab.parar(); cerrar(); } }, t('cancelar')));
+}
+
+// Editar cualquier cosa del diario después: texto, día, lugar o borrarla.
+export function editarEntrada(id) {
+  const P = estado.prog;
+  const e = P.entradas.find((x) => x.id === id);
+  if (!e) return;
+  const texto = h('textarea', { rows: 4, value: e.texto || '', placeholder: e.tipo === 'foto' ? t('pieFoto') : t('notaMarcador') });
+  const cuando = selectorCuando(e.ts), donde = selectorLugar(e.lugar || '');
+  const cont = h('div.form-recuerdo', {}, h('h2', {}, t('editar')), texto, cuando.el, donde.el);
+  const { cerrar } = hoja(cont, { clase: 'completa' });
+  cont.append(h('div.botones', {},
+    h('button.btn', {
+      onclick: async () => {
+        e.texto = texto.value.trim();
+        const ts = cuando.valor();
+        if (ts !== e.ts) { e.ts = ts; registrarActividad(null, null, ts); }
+        e.lugar = donde.valor() || e.lugar;
+        await guardarProgreso();
+        cerrar();
+        pintar();
+      },
+    }, t('guardar')),
+    h('button.btn.sec', { onclick: cerrar }, t('cancelar')),
+    h('button.enlace.peligro', {
+      onclick: async () => {
+        if (!(await confirmar(t('borrarEntrada'), t('borrar'), t('cancelar')))) return;
+        for (const f of e.fotos || []) await blobs.del(f);
+        if (e.audio) await blobs.del(e.audio);
+        P.entradas = P.entradas.filter((x) => x !== e);
+        await guardarProgreso();
+        cerrar();
+        pintar();
+      },
+    }, t('borrar'))));
 }

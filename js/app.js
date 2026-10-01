@@ -37,6 +37,7 @@ const PESTANAS = ['', 'ruta', 'gente', 'recuerdos'];
 
 export async function pintar() {
   pararPosicion();
+  estado.diaPorDefecto = null; // la pantalla de un día lo fija: lo que se añada con ＋ va a ese día
   // al cambiar de pantalla no puede quedar ninguna hoja abierta ni el scroll bloqueado
   document.querySelectorAll('.hoja').forEach((x) => x.remove());
   document.body.classList.remove('bloq');
@@ -319,6 +320,7 @@ async function pantallaSello(id) {
       h('div.botones', {},
         h('button.btn', { onclick: () => sellar(s) }, s.oculto ? t('loHeEncontrado') : t('si')),
         h('button.btn.sec', { onclick: () => history.back() }, t('aunNo'))),
+      h('button.enlace', { onclick: async () => { const ts = await pedirFechaHora(Date.now(), t('estuveOtroDia')); if (ts) sellar(s, ts); } }, t('estuveOtroDia')),
       await bloqueSorpresa(s.sorpresa, false)));
     return;
   }
@@ -327,7 +329,17 @@ async function pantallaSello(id) {
   app.append(h('section.sello-cab', {},
     canvasSello(s, 180),
     h('h1', {}, tx(s.nombre)),
-    h('p.mono', {}, `${t('etapa')} ${s.etapa} · ${fechaCorta(p.ts)}`)));
+    h('p.mono', {}, `${t('etapa')} ${s.etapa} · ${fechaCorta(p.ts)}`),
+    h('button.enlace', {
+      onclick: async () => {
+        const ts = await pedirFechaHora(p.ts, t('cambiarFecha'));
+        if (!ts) return;
+        p.ts = ts;
+        registrarActividad(null, s, ts);
+        await guardarProgreso();
+        pintar();
+      },
+    }, t('cambiarFecha'))));
 
   // recuerdo del caminante
   const rec = h('section.recuerdo', {}, h('h2.seccion', {}, t('tuRecuerdo')));
@@ -359,14 +371,30 @@ async function pantallaSello(id) {
   app.append(await bloqueSorpresa(s.sorpresa, true));
 }
 
-async function sellar(s) {
-  estado.prog.sellos[s.id] = { ts: Date.now(), frase: '', fotos: [], audio: null };
+// Fecha y hora (para sellar o mover algo a otro momento).
+function pedirFechaHora(tsInicial, titulo) {
+  const d = new Date(tsInicial);
+  const loc = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const input = h('input', { type: 'datetime-local', value: loc, max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) });
+  return new Promise((ok) => {
+    const cont = h('div', {}, h('h2', {}, titulo), h('p.mut', {}, t('cuandoFue')), input);
+    const { cerrar } = hoja(cont, { clase: 'centrada' });
+    cont.append(h('div.botones', {},
+      h('button.btn', { onclick: () => { cerrar(); ok(input.value ? new Date(input.value).getTime() : null); } }, t('guardar')),
+      h('button.btn.sec', { onclick: () => { cerrar(); ok(null); } }, t('cancelar'))));
+  });
+}
+
+async function sellar(s, ts = Date.now()) {
+  const ahora = Math.abs(Date.now() - ts) < 3600000;
+  estado.prog.sellos[s.id] = { ts, frase: '', fotos: [], audio: null };
+  if (!ahora) estado.prog.sellos[s.id].despues = Date.now();
   const pe = progEtapa(s.etapa);
-  if (!pe.inicio) pe.inicio = Date.now();
-  registrarActividad(estado.ultimaPos || null, s);
+  if (!pe.inicio || ts < pe.inicio) pe.inicio = ts;
+  registrarActividad(ahora ? estado.ultimaPos || null : null, s, ts);
   await guardarProgreso();
   // la posición del sello se apunta en segundo plano (para los km del día), sin hacer esperar
-  posicionRapida(6000).then(async (pos) => { if (pos) { registrarActividad(pos, s); await guardarProgreso(); } });
+  if (ahora) posicionRapida(6000).then(async (pos) => { if (pos) { registrarActividad(pos, s); await guardarProgreso(); } });
   pedirPersistencia();
   if (navigator.vibrate) navigator.vibrate([30, 60, 90]);
 

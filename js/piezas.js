@@ -1,7 +1,9 @@
 // Piezas compartidas por todas las pantallas.
 import { h, hoja, textoAutor } from './ui.js';
 import { t, tx } from './i18n.js';
-import { estado, medio } from './core.js';
+import { estado, medio, todosSellos } from './core.js';
+import { claveDia, diasOrdenados, numeroDia, fechaLarga, tsParaDia } from './viaje.js';
+import { getIdioma } from './i18n.js';
 import { dibujarSello, dibujarInsignia, lienzo, fechaCorta, fuentesListas } from './graficos.js';
 
 export const app = document.getElementById('app');
@@ -112,3 +114,32 @@ export function preguntas(titulo, lista, previas = []) {
   });
 }
 
+
+// «¿Cuándo?»: hoy, cualquier día del viaje u otra fecha. Todo se puede añadir después.
+export function selectorCuando(tsInicial = estado.diaPorDefecto ? tsParaDia(estado.diaPorDefecto) : Date.now()) {
+  const hoy = claveDia();
+  const inicial = claveDia(tsInicial);
+  const claves = [...new Set([...diasOrdenados(), hoy, inicial])].sort().reverse();
+  const sel = h('select', {},
+    claves.map((k) => h('option', { value: k, selected: k === inicial },
+      `${k === hoy ? t('hoy') + ' · ' : ''}${t('dia')} ${numeroDia(k)} · ${fechaLarga(k, getIdioma())}`)),
+    h('option', { value: 'otra' }, t('otraFecha')));
+  const fecha = h('input', { type: 'date', hidden: true, value: inicial });
+  sel.addEventListener('change', () => { fecha.hidden = sel.value !== 'otra'; });
+  const el = h('label', {}, h('span.mono', {}, t('cuando')), sel, fecha);
+  return {
+    el,
+    // si no se ha cambiado el día, se conserva la hora original
+    valor: () => {
+      const k = sel.value === 'otra' ? fecha.value || hoy : sel.value;
+      return k === inicial && tsInicial ? tsInicial : tsParaDia(k);
+    },
+  };
+}
+
+// «¿Dónde?»: un lugar de la ruta, opcional.
+export function selectorLugar(idInicial = '') {
+  const sel = h('select', {}, h('option', { value: '' }, t('lugarAuto')),
+    todosSellos().map((s) => h('option', { value: s.id, selected: s.id === idInicial }, `${t('etapa')} ${s.etapa} · ${tx(s.nombre)}`)));
+  return { el: h('label', {}, h('span.mono', {}, t('donde')), sel), valor: () => sel.value || null };
+}

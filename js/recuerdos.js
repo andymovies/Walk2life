@@ -1,10 +1,12 @@
 // "Recuerdos": días del diario, logros, álbum de figuras, insignia y entregables.
-import { h } from './ui.js';
+import { h, hoja } from './ui.js';
 import { t, tx, getIdioma } from './i18n.js';
-import { estado, todosSellos, cuenta } from './core.js';
-import { urlBlob } from './db.js';
-import { app, cabecera, canvasInsignia } from './piezas.js';
-import { diasOrdenados, numeroDia, fechaLarga, kmDia, kmTotales, contenidoDia } from './viaje.js';
+import { estado, todosSellos, cuenta, guardarProgreso } from './core.js';
+import { urlBlob, blobs } from './db.js';
+import { comprimirFoto, elegirFotos } from './media.js';
+import { app, cabecera, canvasInsignia, pintar } from './piezas.js';
+import { diasOrdenados, numeroDia, fechaLarga, kmDia, kmTotales, contenidoDia, dia, claveDia } from './viaje.js';
+import { cerrarDia } from './hoy.js';
 import { logros, medalla } from './logros.js';
 import { figuraProvisional } from './captura.js';
 
@@ -42,6 +44,7 @@ export async function pantallaRecuerdos() {
         h('span.mut', {}, `${kmTxt(kmDia(d))} km · ${t('momentosN', { n })}`),
         d.diario ? h('span.mono', {}, d.diario.slice(0, 60) + (d.diario.length > 60 ? '…' : '')) : null)));
   }
+  dias.append(h('button.enlace', { onclick: anadirDia }, '＋ ' + t('anadirDiaPasado')));
   app.append(dias);
 
   // logros
@@ -67,4 +70,39 @@ export async function pantallaRecuerdos() {
   }
   album.append(ga);
   app.append(album);
+
+  // credencial en papel (opcional)
+  const papel = h('section.papel', {}, h('h2.seccion', {}, t('credencialPapel')), h('p.mut', {}, t('credencialPapelTexto')));
+  const g = h('div.miniaturas');
+  for (const f of P.papel) {
+    g.append(h('div.mini', {}, h('img', { src: await urlBlob(f), alt: '' }), h('button', {
+      onclick: async () => { P.papel = P.papel.filter((x) => x !== f); await blobs.del(f); await guardarProgreso(); pintar(); },
+    }, '×')));
+  }
+  papel.append(g, h('button.btn.sec', {
+    onclick: async () => {
+      for (const f of (await elegirFotos(true)).slice(0, 6)) P.papel.push(await blobs.guardar(await comprimirFoto(f, 1800, 0.85), 'papel'));
+      await guardarProgreso();
+      pintar();
+    },
+  }, '＋ ' + t('subirCredencial')));
+  app.append(papel);
+}
+
+// Añadir un día pasado (por ejemplo, uno en el que no se abrió la app) y escribir su diario.
+function anadirDia() {
+  const fecha = h('input', { type: 'date', max: claveDia(), value: claveDia(Date.now() - 86400000) });
+  const cont = h('div', {}, h('h2', {}, t('anadirDiaPasado')), fecha);
+  const { cerrar } = hoja(cont, { clase: 'centrada' });
+  cont.append(h('div.botones', {},
+    h('button.btn', {
+      onclick: async () => {
+        if (!fecha.value) return;
+        dia(fecha.value);
+        await guardarProgreso();
+        cerrar();
+        setTimeout(() => cerrarDia(fecha.value), 350);
+      },
+    }, t('continuar')),
+    h('button.btn.sec', { onclick: cerrar }, t('cancelar'))));
 }

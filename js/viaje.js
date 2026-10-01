@@ -112,19 +112,30 @@ export function dia(clave = claveDia(), crear = true) {
 }
 
 // Punto (posición + km + lugar) a partir de una posición y/o un sello.
-function punto(pos, sello) {
+function punto(pos, sello, ts = Date.now()) {
   const km = pos && track ? kmEnTrack(pos).km : kmLugar(sello);
-  return { ts: Date.now(), pos: pos || null, km: km ?? null, lugar: sello ? sello.id : null };
+  return { ts, pos: pos || null, km: km ?? null, lugar: sello ? sello.id : null };
 }
 
 // Cualquier cosa que hace el caminante abre el día (si no lo estaba) y actualiza el último punto.
-export function registrarActividad(pos, sello = null) {
-  const d = dia();
+// También sirve para cosas añadidas después (ts de otro día): se apuntan en su día, sin GPS.
+export function registrarActividad(pos, sello = null, ts = Date.now()) {
+  const d = dia(claveDia(ts));
   const lugar = sello || lugarCercano(pos);
-  const p = punto(pos, lugar);
-  if (!d.inicio) d.inicio = p;
-  d.ultimo = p;
+  const p = punto(pos, lugar, ts);
+  if (!d.inicio || ts < d.inicio.ts) d.inicio = p;
+  if (!d.ultimo || ts >= d.ultimo.ts) d.ultimo = p;
   return d;
+}
+
+// ¿Es de hoy? Lo añadido a otro día no usa GPS (no estás allí).
+export const esHoy = (ts) => claveDia(ts) === claveDia();
+
+// Hora para algo añadido a otro día: la hora actual de ese día, o las 21:00 si es un día pasado.
+export function tsParaDia(clave) {
+  if (clave === claveDia()) return Date.now();
+  const [a, m, d] = clave.split('-').map(Number);
+  return new Date(a, m - 1, d, 21, 0, 0).getTime();
 }
 
 export function kmDia(d) {
@@ -180,12 +191,14 @@ export function diaSinCerrar() {
 }
 
 // Crear una entrada de diario (foto, nota o voz).
-export async function nuevaEntrada(datos) {
-  const pos = await posicionRapida(5000);
-  const lugar = lugarCercano(pos);
-  const e = { id: 'n' + Date.now().toString(36), ts: Date.now(), pos, lugar: lugar ? lugar.id : null, ...datos };
+// Crear una entrada de diario. `cuando` (ts) y `lugarId` permiten añadirla después a otro día o lugar.
+export async function nuevaEntrada(datos, { cuando = Date.now(), lugarId = null } = {}) {
+  const pos = esHoy(cuando) ? await posicionRapida(5000) : null;
+  const lugar = lugarId ? todosSellos().find((s) => s.id === lugarId) : lugarCercano(pos);
+  const e = { id: 'n' + Date.now().toString(36), ts: cuando, pos, lugar: lugar ? lugar.id : null, ...datos };
+  if (!esHoy(cuando)) e.despues = Date.now();
   estado.prog.entradas.push(e);
-  registrarActividad(pos, lugar);
+  registrarActividad(pos, lugar, cuando);
   await guardarProgreso();
   return e;
 }

@@ -36,6 +36,7 @@ function completarProgreso(p) {
   p.capturas ||= {};   // selloId → { ts, foto }
   p.mensajes ||= [];   // mensajes secretos recibidos
   p.enviados ||= [];   // mensajes secretos enviados
+  p.papel ||= [];      // fotos de la credencial en papel (opcional)
   return p;
 }
 
